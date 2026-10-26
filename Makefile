@@ -37,8 +37,8 @@ $(TARGET).hex: $(TARGET).elf
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-size: $(TARGET).elf
-	$(SIZE) --format=avr --mcu=$(MCU) $<
+size:
+	@avr-size --format=avr --mcu=atmega162 $(TARGET).elf 2>nul || avr-size -B $(TARGET).elf 2>/dev/null || avr-size $(TARGET).elf
 
 clean:
 	rm -f $(OBJ) $(TARGET).elf $(TARGET).hex $(TARGET).map

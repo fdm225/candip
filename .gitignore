@@ -4,3 +4,6 @@
 build/
 dist/
 *.log
+*.o
+*.elf
+*.hex
