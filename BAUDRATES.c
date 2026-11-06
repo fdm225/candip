@@ -1,6 +1,6 @@
 #include "BAUDRATES.h"
 
-const uint8_t Num_Baud_Rate = 93;
+const uint8_t Num_Baud_Rate = 89;
 
 const uint8_t Baud_Rate_BTR0[] PROGMEM = {
     0x03, 0x43, 0x83, 0xc3, 0x03, 0x43, 0x83, 0x03, 0x43, 0x83,

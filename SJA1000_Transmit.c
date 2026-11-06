@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdint.h>
 #include "SJA1000.h"
 
 void CAN_Transmit(uint16_t id, uint8_t dataLength, 
@@ -8,23 +9,17 @@ void CAN_Transmit(uint16_t id, uint8_t dataLength,
                   uint8_t byte5, uint8_t byte6,
                   uint8_t byte7, uint8_t byte8)
 {
-    uint16_t timeout = 50000;
+    /* 1. Wait until SJA1000 Transmit Buffer is released (TBS = 1) */
+    while (!(CAN_STATUS & TBS));
 
-    /* 1. Wait until Transmit Buffer is free (TBS = 1), with timeout guard */
-    while (!(CAN_STATUS & TBS)) {
-        if (--timeout == 0) {
-            return; // Bus error / arbitration fail-safe: don't hang MCU
-        }
-    }
-
-    /* 2. Load Frame Info (Standard Frame Format FF=0, RTR=0, DLC) */
+    /* 2. Configure Standard Frame Format (FF=0, RTR=0) with DLC */
     CAN_TX_FRMINFO = (dataLength & 0x0F);
 
-    /* 3. Load 11-bit Standard ID */
+    /* 3. Load 11-bit Standard Identifier into ID1 and ID2 */
     CAN_TX_ID1 = (uint8_t)(id >> 3);
     CAN_TX_ID2 = (uint8_t)((id & 0x07) << 5);
 
-    /* 4. Pack Data */
+    /* 4. Pack payload bytes into SJA1000 TX mailbox */
     *(volatile uint8_t *)(CAN_TX_DATA_BASE + 0) = byte1;
     *(volatile uint8_t *)(CAN_TX_DATA_BASE + 1) = byte2;
     *(volatile uint8_t *)(CAN_TX_DATA_BASE + 2) = byte3;
@@ -34,6 +29,9 @@ void CAN_Transmit(uint16_t id, uint8_t dataLength,
     *(volatile uint8_t *)(CAN_TX_DATA_BASE + 6) = byte7;
     *(volatile uint8_t *)(CAN_TX_DATA_BASE + 7) = byte8;
 
-    /* 5. Issue Transmit Request */
+    /* 5. Command Transmission Request */
     CAN_CMD = TXREQ;
+
+    /* 6. Wait for Transmission Complete before returning */
+    while (!(CAN_STATUS & TBS));
 }

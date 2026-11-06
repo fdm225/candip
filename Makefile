@@ -18,7 +18,7 @@ AVRDUDE = avrdude
 
 # Programmer settings (adjust to match your programmer e.g. usbasp, avrisp2, etc.)
 PROGRAMMER = avrisp
-PORT       = /dev/cu.usbserial-1220
+PORT      ?= $(firstword $(wildcard /dev/cu.usbserial-*))
 BAUD       = 19200
 
 CFLAGS  = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall -Wextra -std=gnu99
@@ -44,6 +44,12 @@ clean:
 	rm -f $(OBJ) $(TARGET).elf $(TARGET).hex $(TARGET).map
 
 flash: $(TARGET).hex
+	@if [ -z "$(PORT)" ]; then echo "Error: No /dev/cu.usbserial-* device found. Plug in the programmer or specify PORT=/dev/cu.xxx"; exit 1; fi
 	$(AVRDUDE) -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -V -U flash:w:$<:i
 
-.PHONY: all clean flash size
+# Compare the chip's flash against canTest.hex (use after a flash that did not boot)
+verify: $(TARGET).hex
+	@if [ -z "$(PORT)" ]; then echo "Error: No /dev/cu.usbserial-* device found. Plug in the programmer or specify PORT=/dev/cu.xxx"; exit 1; fi
+	$(AVRDUDE) -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U flash:v:$<:i
+
+.PHONY: all clean flash verify size

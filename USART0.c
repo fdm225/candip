@@ -78,19 +78,7 @@ void USART0_Transmit_Buff_Insert(uint8_t data)
 
 void USART0_Transmit(uint8_t data)
 {
-    uint8_t newLineFlag = 0;
-
-    if (data == '\n' || data == '\r') {
-        data = '\r';
-        newLineFlag = 1;
-    }
-
     USART0_Transmit_Buff_Insert(data);
-  
-    if (newLineFlag) {
-        USART0_Transmit_Buff_Insert('\n');
-    }
-  
     UCSR0B |= (1 << UDRIE0);
 }
 
